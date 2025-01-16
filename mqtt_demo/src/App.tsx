@@ -1,19 +1,50 @@
-// src/App.tsx
-import React, { useEffect, useState } from 'react';
+import * as React from 'react';
+import { useState } from 'react';
+import { styled } from '@mui/material/styles';
+import Box from '@mui/material/Box';
+import Paper from '@mui/material/Paper';
+import Grid from '@mui/material/Grid2';
+import CircularProgress from '@mui/material/CircularProgress';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
+import TextField from '@mui/material/TextField';
+import Button from '@mui/material/Button';
+import SendMessage from './message_system/SendMessage';
 import mqtt from 'mqtt';
+import MessageDisplay from './message_system/MessageDisplay';
 
 const MQTT_BROKER = 'ws://74.234.192.245:9001'; // Replace with your MQTT broker IP and WebSocket port
-const MQTT_TOPIC = 'test/topic';
+
+const MQTT_TOPIC = 'message/topic';
+
 
 const App: React.FC = () => {
-  const [message, setMessage] = useState<string>('');
-  const [receivedMessages, setReceivedMessages] = useState<string[]>([]);
-  const [client, setClient] = useState<mqtt.MqttClient | null>(null);
+  const [open, setOpen] = React.useState(false);
+  const [c, setClient] = useState<any>(null);
+  const [name, setName] = useState<string>('');
+  const Item = styled(Paper)(({ theme }) => ({
+    backgroundColor: '#fff',
+    ...theme.typography.body2,
+    textAlign: 'center',
+    height: '100%',
+    padding: "-10px",
+    color: theme.palette.text.secondary,
+    ...theme.applyStyles('dark', {
+      backgroundColor: '#1A2027',
+    }),
+  }));
 
-  useEffect(() => {
-    // Connect to the MQTT broker
+  // Load name from local storage
+  React.useEffect(() => {
+    const name = localStorage.getItem('name');
+    if (name) {
+      setName(name);
+    }
     const mqttClient = mqtt.connect(MQTT_BROKER);
-
+    
     mqttClient.on('connect', () => {
       console.log('Connected to MQTT broker');
       mqttClient.subscribe(MQTT_TOPIC, (err) => {
@@ -24,59 +55,72 @@ const App: React.FC = () => {
         }
       });
     });
-
-    mqttClient.on('message', (topic, payload) => {
-      console.log(`Message received on topic ${topic}: ${payload}`);
-      setReceivedMessages((prev) => [...prev, payload.toString()]);
-    });
-
-    mqttClient.on('error', (err) => {
-      console.error('MQTT error:', err);
-    });
-
     setClient(mqttClient);
-
-    // Cleanup on component unmount
-    return () => {
-      mqttClient.end();
-    };
   }, []);
 
-  const handleSendMessage = () => {
-    if (client && message) {
-      client.publish(MQTT_TOPIC, message, (err) => {
-        if (err) {
-          console.error('Failed to publish message:', err);
-        } else {
-          console.log('Message published:', message);
-        }
-      });
-      setMessage('');
-    }
-  };
-
   return (
-    <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif' }}>
-      <h1>MQTT React App</h1>
-      <div>
-        <input
-          type="text"
-          placeholder="Enter a message"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          style={{ padding: '10px', marginRight: '10px' }}
-        />
-        <button onClick={handleSendMessage} style={{ padding: '10px' }}>
-          Send Message
-        </button>
-      </div>
-      <h2>Received Messages:</h2>
-      <ul>
-        {receivedMessages.map((msg, index) => (
-          <li key={index}>{msg}</li>
-        ))}
-      </ul>
-    </div>
+    <Box style={{ width: '100vw', margin: 0, height: '100vh', padding: 0 }}>
+      <Dialog
+        open={name == ''}
+        PaperProps={{
+          component: 'form',
+          onSubmit: (event: React.FormEvent<HTMLFormElement>) => {
+            event.preventDefault();
+            const formData = new FormData(event.currentTarget);
+            const formJson = Object.fromEntries((formData as any).entries());
+            const name = formJson.name;
+            setName(name);
+            // Save to local storage
+            localStorage.setItem('name', name);
+
+          },
+        }}
+      >
+         <DialogTitle>User info</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            To use the app please enter a nickname.
+          </DialogContentText>
+          <TextField
+            autoFocus
+            required
+            margin="dense"
+            id="name"
+            name="name"
+            label="Nikname"
+            type="login"
+            fullWidth
+            variant="standard"
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button type="submit">Subscribe</Button>
+        </DialogActions>
+
+      </Dialog>
+      <Grid container spacing={2} style={{ height: '100%' }}>
+        <Grid size={8} style={{ height: '50%' }}>
+            { name != '' ? 
+            <Item>
+              <MessageDisplay client={c} topic={MQTT_TOPIC} />
+            </Item>
+            : <CircularProgress style={ { color: 'white' } } /> }
+        </Grid>
+        <Grid size={4} style={{ height: '50%' }}>
+            { name != '' ? 
+            <Item>
+              <SendMessage client={c} topic={MQTT_TOPIC} />
+            </Item> : 
+            <CircularProgress style={ { color: 'white' } } /> }
+        </Grid>
+        <Grid size={4} style={{ height: '50%' }}>
+            { name != '' ? <Item>size=8</Item> : <CircularProgress style={ { color: 'white' } } /> }
+        </Grid>
+        <Grid size={8} style={{ height: '50%' }}>
+            { name != '' ? <Item>size=8</Item> : <CircularProgress style={ { color: 'white' } } /> }
+        </Grid>
+      </Grid>
+    </Box>
   );
 };
 
