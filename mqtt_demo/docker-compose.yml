@@ -1,0 +1,7 @@
+services:
+  mqtt-broker:
+    image: obiasnara/ari_mqtt_demo:latest
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf

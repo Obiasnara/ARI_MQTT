@@ -1,0 +1,5 @@
+
+mosquitto/data
+mosquitto/log
+mqtt_demo/dist
+mqtt_demo/node_modules
