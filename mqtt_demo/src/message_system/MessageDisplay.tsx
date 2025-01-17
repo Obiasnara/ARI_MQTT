@@ -1,5 +1,4 @@
-// src/MessageDisplay.tsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Box, Typography, List, ListItem, ListItemText, Paper } from '@mui/material';
 
 interface MessageDisplayProps {
@@ -9,6 +8,7 @@ interface MessageDisplayProps {
 
 const MessageDisplay: React.FC<MessageDisplayProps> = ({ client, topic }) => {
   const [messages, setMessages] = useState<string[]>([]);
+  const listEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!client) return;
@@ -22,7 +22,7 @@ const MessageDisplay: React.FC<MessageDisplayProps> = ({ client, topic }) => {
     };
 
     // Subscribe to the topic and listen for messages
-    client.subscribe(topic, (err : any) => {
+    client.subscribe(topic, (err: any) => {
       if (err) {
         console.error('Failed to subscribe to topic:', err);
       } else {
@@ -33,7 +33,7 @@ const MessageDisplay: React.FC<MessageDisplayProps> = ({ client, topic }) => {
     client.on('message', handleMessage);
 
     return () => {
-      client.unsubscribe(topic, (err : any) => {
+      client.unsubscribe(topic, (err: any) => {
         if (err) {
           console.error('Failed to unsubscribe from topic:', err);
         } else {
@@ -45,27 +45,31 @@ const MessageDisplay: React.FC<MessageDisplayProps> = ({ client, topic }) => {
     };
   }, [client, topic]);
 
+  useEffect(() => {
+    // Scroll to the end of the list when messages update
+    listEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
   return (
-    <Box>
-      <Typography variant="h5" gutterBottom>
-        Messages :
-      </Typography>
-      <Paper sx={{ maxHeight: "45vh", overflowY: 'auto' }} elevation={3}>
+    <>
+      <Paper sx={{ maxHeight: "90vh", overflowY: 'auto' }} elevation={3}>
         <List>
           {messages.length > 0 ? (
             messages.map((msg, index) => (
-                <ListItem key={index}>
-                    <ListItemText primary={msg} />
-                </ListItem>
-                ))
+              <ListItem key={index}>
+                <ListItemText primary={msg} />
+              </ListItem>
+            ))
           ) : (
             <Typography variant="body2" color="textSecondary" align="center">
               No messages received yet.
             </Typography>
           )}
+          {/* Invisible div to scroll to */}
+          <div ref={listEndRef} />
         </List>
       </Paper>
-    </Box>
+    </>
   );
 };
 

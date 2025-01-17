@@ -1,6 +1,7 @@
 // src/SendMessage.tsx
 import React, { useState } from 'react';
 import { TextField, Button, Typography, Box } from '@mui/material';
+import Alert from '@mui/material/Alert';
 
 
 interface SendMessageProps {
@@ -10,7 +11,7 @@ interface SendMessageProps {
 
 const SendMessage: React.FC<SendMessageProps> = ({ client, topic }) => {
   const [message, setMessage] = useState<string>('');
-
+  const [send_error_alert, setSendErrorAlert] = useState<boolean>(false);
   const handleSendMessage = () => {
     if (client && message) {
       const message_format = JSON.stringify({ 
@@ -18,39 +19,47 @@ const SendMessage: React.FC<SendMessageProps> = ({ client, topic }) => {
         message: message 
       });
       client.publish(topic, message_format, (err: any) => {
+        // Alert Material-UI dialog if there is an error
         if (err) {
           console.error('Failed to publish message:', err);
-        } else {
-          console.log('Message published:', message);
+          setSendErrorAlert(true);
+          setTimeout(() => {
+            setSendErrorAlert(false);
+          }
+          , 2000);
         }
       });
       setMessage('');
     }
   };
 
+  // Enter key listener for sending messages
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSendMessage();
+    }
+  };
+
   return (
-    <Box sx={{ padding: 3, fontFamily: 'Arial, sans-serif', maxWidth: 400, margin: '0 auto' }}>
-      <Typography variant="h4" gutterBottom>
-        MQTT React App
-      </Typography>
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-        <TextField
-          label="Enter a message"
-          variant="outlined"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          fullWidth
-        />
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={handleSendMessage}
-          sx={{ padding: 1.5 }}
-        >
-          Send Message
-        </Button>
-      </Box>
-    </Box>
+    <>
+      { send_error_alert && <Alert severity="error">Failed to send message</Alert> }
+      <TextField
+        label="Enter a message"
+        variant="outlined"
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        onKeyPress={handleKeyPress}
+        autoFocus={true}
+        fullWidth
+      />
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={handleSendMessage}
+      >
+        Send Message
+      </Button>
+    </>
   );
 };
 

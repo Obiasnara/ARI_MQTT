@@ -20,7 +20,6 @@ const MQTT_BROKER = 'ws://74.234.192.245:9001'; // Replace with your MQTT broker
 
 const MQTT_TOPIC = 'message/topic';
 
-
 const App: React.FC = () => {
   const [open, setOpen] = React.useState(false);
   const [c, setClient] = useState<any>(null);
@@ -98,28 +97,20 @@ const App: React.FC = () => {
         </DialogActions>
 
       </Dialog>
-      <Grid container spacing={2} style={{ height: '100%' }}>
-        <Grid size={8} style={{ height: '50%' }}>
+        <Grid size={8} style={{ height: '90vh' }}>
             { name != '' ? 
             <Item>
               <MessageDisplay client={c} topic={MQTT_TOPIC} />
             </Item>
             : <CircularProgress style={ { color: 'white' } } /> }
         </Grid>
-        <Grid size={4} style={{ height: '50%' }}>
+        <Grid size={4} style={{ height: '10vh' }}>
             { name != '' ? 
             <Item>
               <SendMessage client={c} topic={MQTT_TOPIC} />
             </Item> : 
             <CircularProgress style={ { color: 'white' } } /> }
         </Grid>
-        <Grid size={4} style={{ height: '50%' }}>
-            { name != '' ? <Item>size=8</Item> : <CircularProgress style={ { color: 'white' } } /> }
-        </Grid>
-        <Grid size={8} style={{ height: '50%' }}>
-            { name != '' ? <Item>size=8</Item> : <CircularProgress style={ { color: 'white' } } /> }
-        </Grid>
-      </Grid>
     </Box>
   );
 };
