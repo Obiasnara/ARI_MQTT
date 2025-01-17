@@ -84,7 +84,7 @@ Use the `mqtt_demo/docker-compose.yml` file to host the React application:
 ```yaml
 services:
   mqtt-broker:
-    image: obiasnara/ari_mqtt_demo:latest
+    image: your_docker_hub_url
     ports:
       - "80:80"
     volumes:
@@ -128,7 +128,7 @@ CMD ["nginx", "-g", "daemon off;"]
 
 ## Publish the image to Docker Hub
 ```bash
-docker build -t your_repo .
+docker build -t your_docker_hub_url .
 ```
 
 #### Example MQTT Integration in React:
